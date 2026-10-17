@@ -119,6 +119,9 @@ public class ConnectionsManager extends BaseController {
     public final static byte USE_IPV4_IPV6_RANDOM = 2;
 
     private static long lastDnsRequestTime;
+    // Backup addresses come from Telegram's DNS records and would send the client
+    // to Telegram's servers instead of the Rudy server.
+    private final static boolean USE_BACKUP_DNS_ADDRESSES = false;
 
     public final static int DEFAULT_DATACENTER_ID = Integer.MAX_VALUE;
 
@@ -874,6 +877,9 @@ public class ConnectionsManager extends BaseController {
     }
 
     public static void onRequestNewServerIpAndPort(final int second, final int currentAccount) {
+        if (!USE_BACKUP_DNS_ADDRESSES) {
+            return;
+        }
         Utilities.globalQueue.postRunnable(() -> {
             boolean networkOnline = ApplicationLoader.isNetworkOnline();
             Utilities.stageQueue.postRunnable(() -> {
