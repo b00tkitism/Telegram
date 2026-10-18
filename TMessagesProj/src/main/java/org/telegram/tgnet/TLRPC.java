@@ -72,7 +72,9 @@ public class TLRPC {
     public static final int MESSAGE_FLAG_HAS_BOT_ID         = 0x00000800;
     public static final int MESSAGE_FLAG_EDITED             = 0x00008000;
 
-    public static final int LAYER = 231;
+    // The Rudy server (gramsrv) only admits the exact layers it ships schemas for (225..230)
+    // and rejects anything newer before the request reaches its handler.
+    public static final int LAYER = 230;
 
     public static abstract class EmailVerifyPurpose extends TLObject {
 

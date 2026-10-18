@@ -3236,7 +3236,10 @@ public class LoginActivity extends BaseFragment implements NotificationCenter.No
                         } else if (error.text.startsWith("FLOOD_WAIT")) {
                             needShowAlert(getString(R.string.RestorePasswordNoEmailTitle), getString("FloodWait", R.string.FloodWait));
                         } else if (error.code != -1000) {
-                            AlertsCreator.processError(currentAccount, error, LoginActivity.this, req, phoneInputData.phoneNumber);
+                            if (AlertsCreator.processError(currentAccount, error, LoginActivity.this, req, phoneInputData.phoneNumber) == null && req instanceof TLRPC.TL_auth_sendCode) {
+                                // processError has no case for auth.sendCode, so say what the server answered instead of silently staying here
+                                needShowAlert(getString(R.string.RestorePasswordNoEmailTitle), error.text);
+                            }
                         }
                     }
                 }
