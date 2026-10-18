@@ -45,6 +45,10 @@ jmethodID jclass_ByteBuffer_allocateDirect = nullptr;
 
 static bool done = false;
 
+// Every datacenter id points at the Rudy server; it answers for all of them.
+static const char *RUDY_SERVER_ADDRESS = "185.155.8.118";
+static const uint32_t RUDY_SERVER_PORT = 2398;
+
 ConnectionsManager::ConnectionsManager(int32_t instance) {
     instanceNum = instance;
     if ((epolFd = epoll_create(128)) == -1) {
@@ -1817,17 +1821,28 @@ uint8_t ConnectionsManager::getIpStratagy() {
 }
 
 void ConnectionsManager::initDatacenters() {
-    // Every datacenter id points at the Rudy server; it answers for all of them.
-    static const char *serverAddress = "185.155.8.118";
-    static const uint32_t serverPort = 2398;
     uint32_t datacentersCount = testBackend ? 3 : 5;
     for (uint32_t datacenterId = 1; datacenterId <= datacentersCount; datacenterId++) {
         if (datacenters.find(datacenterId) == datacenters.end()) {
-            Datacenter *datacenter = new Datacenter(instanceNum, datacenterId);
-            datacenter->addAddressAndPort(serverAddress, serverPort, 0, "");
-            datacenters[datacenterId] = datacenter;
+            datacenters[datacenterId] = new Datacenter(instanceNum, datacenterId);
         }
     }
+    // Also re-pins datacenters restored from a saved config, which may hold addresses
+    // an earlier build took from the server.
+    for (auto &iter : datacenters) {
+        pinToRudyServer(iter.second);
+    }
+}
+
+void ConnectionsManager::pinToRudyServer(Datacenter *datacenter) {
+    std::vector<TcpAddress> rudy;
+    rudy.emplace_back(RUDY_SERVER_ADDRESS, RUDY_SERVER_PORT, 0, "");
+    std::vector<TcpAddress> none;
+    datacenter->replaceAddresses(rudy, 0);
+    datacenter->replaceAddresses(none, 1);
+    datacenter->replaceAddresses(none, 2);
+    datacenter->replaceAddresses(none, 3);
+    datacenter->replaceAddresses(none, TcpAddressFlagTemp);
 }
 
 void ConnectionsManager::attachConnection(ConnectionSocket *connection) {
@@ -3351,78 +3366,22 @@ void ConnectionsManager::updateDcSettings(uint32_t dcNum, bool workaround, bool 
                 lastDcUpdateTime = (int32_t) (getCurrentTimeMonotonicMillis() / 1000) - DC_UPDATE_TIME + updateIn;
             }
 
-            struct DatacenterInfo {
-                std::vector<TcpAddress> addressesIpv4;
-                std::vector<TcpAddress> addressesIpv6;
-                std::vector<TcpAddress> addressesIpv4Download;
-                std::vector<TcpAddress> addressesIpv6Download;
-                bool isCdn = false;
-                bool forceTryIpV6;
-
-                void addAddressAndPort(TL_dcOption *dcOption) {
-                    std::vector<TcpAddress> *addresses;
-                    if (!isCdn) {
-                        isCdn = dcOption->cdn;
-                    }
-                    forceTryIpV6 = dcOption->force_try_ipv6;
-                    if (dcOption->media_only) {
-                        if (dcOption->ipv6) {
-                            addresses = &addressesIpv6Download;
-                        } else {
-                            addresses = &addressesIpv4Download;
-                        }
-                    } else {
-                        if (dcOption->ipv6) {
-                            addresses = &addressesIpv6;
-                        } else {
-                            addresses = &addressesIpv4;
-                        }
-                    }
-                    for (auto & addresse : *addresses) {
-                        if (addresse.address == dcOption->ip_address && addresse.port == dcOption->port) {
-                            return;
-                        }
-                    }
-                    std::string secret;
-                    if (dcOption->secret != nullptr) {
-                        secret = std::string((const char *) dcOption->secret->bytes, dcOption->secret->length);
-                    }
-                    if (LOGS_ENABLED) DEBUG_D("getConfig add %s:%d to dc%d, flags %d, has_secret = %d[%d], try_this_port_only = %d, force_try_ipv6 = %d", dcOption->ip_address.c_str(), dcOption->port, dcOption->id, dcOption->flags, dcOption->secret != nullptr ? 1 : 0, dcOption->secret != nullptr ? dcOption->secret->length : 0, dcOption->thisPortOnly ? 1 : 0, dcOption->force_try_ipv6 ? 1 : 0);
-                    if (dcOption->thisPortOnly) {
-                        addresses->insert(addresses->begin(), TcpAddress(dcOption->ip_address, dcOption->port, dcOption->flags, secret));
-                    } else {
-                        addresses->push_back(TcpAddress(dcOption->ip_address, dcOption->port, dcOption->flags, secret));
-                    }
-
+            // The server's advertised addresses are ignored: a server left on its default
+            // advertise IP (127.0.0.1) would otherwise strand the client after the first config.
+            std::map<uint32_t, bool> datacenterIds;
+            for (auto &dcOption : config->dc_options) {
+                if (!dcOption->cdn) {
+                    datacenterIds[(uint32_t) dcOption->id] = true;
                 }
-            };
-
-            std::map<uint32_t, std::unique_ptr<DatacenterInfo>> map;
-            size_t count = config->dc_options.size();
-            for (uint32_t a = 0; a < count; a++) {
-                TL_dcOption *dcOption = config->dc_options[a].get();
-                auto iter = map.find((uint32_t) dcOption->id);
-                DatacenterInfo *info;
-                if (iter == map.end()) {
-                    map[dcOption->id] = std::unique_ptr<DatacenterInfo>(info = new DatacenterInfo);
-                } else {
-                    info = iter->second.get();
-                }
-                info->addAddressAndPort(dcOption);
             }
-
-            if (!map.empty()) {
-                for (auto & iter : map) {
+            if (!datacenterIds.empty()) {
+                for (auto &iter : datacenterIds) {
                     Datacenter *datacenter = getDatacenterWithId(iter.first);
-                    DatacenterInfo *info = iter.second.get();
                     if (datacenter == nullptr) {
                         datacenter = new Datacenter(instanceNum, iter.first);
                         datacenters[iter.first] = datacenter;
                     }
-                    datacenter->replaceAddresses(info->addressesIpv4, info->isCdn ? 8 : 0);
-                    datacenter->replaceAddresses(info->addressesIpv6, info->isCdn ? 9 : 1);
-                    datacenter->replaceAddresses(info->addressesIpv4Download, info->isCdn ? 10 : 2);
-                    datacenter->replaceAddresses(info->addressesIpv6Download, info->isCdn ? 11 : 3);
+                    pinToRudyServer(datacenter);
                     if (iter.first == movingToDatacenterId) {
                         movingToDatacenterId = DEFAULT_DATACENTER_ID;
                         moveToDatacenter(iter.first);
