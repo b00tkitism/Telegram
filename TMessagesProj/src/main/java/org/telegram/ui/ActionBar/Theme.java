@@ -1773,18 +1773,23 @@ public class Theme {
                 }
 
                 //override default themes
-                if (isHome(themeAccent) && name.equals("Dark Blue") || name.equals("Night")) {
+                if (isHome(themeAccent) && name.equals("Dark Blue")) {
+                    themeAccent.patternSlug = "";
+                    themeAccent.patternIntensity = 0;
+                    themeAccent.backgroundOverrideColor = 0xff141416;
+                    themeAccent.backgroundGradientOverrideColor1 = 0xff1c1c1f;
+                    themeAccent.backgroundGradientOverrideColor2 = 0xff161618;
+                    themeAccent.backgroundGradientOverrideColor3 = 0xff1f1f22;
+                } else if (name.equals("Night")) {
                     themeAccent.myMessagesAccentColor = 0xff258DE5;
                     themeAccent.myMessagesGradientAccentColor1 = 0xff4272DF;
                     themeAccent.myMessagesGradientAccentColor2 = 0xff8146D7;
                     themeAccent.myMessagesGradientAccentColor3 = 0xff9F3EAA;
-                    if (name.equals("Night")) {
-                        themeAccent.patternIntensity = -0.57f;
-                        themeAccent.backgroundOverrideColor = 0xff6c7fa6;
-                        themeAccent.backgroundGradientOverrideColor1 = 0xff2e344b;
-                        themeAccent.backgroundGradientOverrideColor2 = 0xff7874a7;
-                        themeAccent.backgroundGradientOverrideColor3 = 0xff333258;
-                    }
+                    themeAccent.patternIntensity = -0.57f;
+                    themeAccent.backgroundOverrideColor = 0xff6c7fa6;
+                    themeAccent.backgroundGradientOverrideColor1 = 0xff2e344b;
+                    themeAccent.backgroundGradientOverrideColor2 = 0xff7874a7;
+                    themeAccent.backgroundGradientOverrideColor3 = 0xff333258;
                 }
                 themeAccentsMap.put(themeAccent.id, themeAccent);
                 themeAccents.add(themeAccent);
@@ -3897,9 +3902,9 @@ public class Theme {
         ThemeInfo themeInfo = new ThemeInfo();
         themeInfo.name = "Blue";
         themeInfo.assetName = "bluebubbles.attheme";
-        themeInfo.previewBackgroundColor = 0xff95beec;
+        themeInfo.previewBackgroundColor = 0xffe4e4e0;
         themeInfo.previewInColor = 0xffffffff;
-        themeInfo.previewOutColor = 0xffd0e6ff;
+        themeInfo.previewOutColor = 0xff111113;
         themeInfo.firstAccentIsDefault = true;
         themeInfo.currentAccentId = DEFALT_THEME_ACCENT_ID;
         themeInfo.sortIndex = 1;
@@ -3923,9 +3928,9 @@ public class Theme {
         themeInfo = new ThemeInfo();
         themeInfo.name = "Dark Blue";
         themeInfo.assetName = "darkblue.attheme";
-        themeInfo.previewBackgroundColor = 0xff5f6e82;
-        themeInfo.previewInColor = 0xff76869c;
-        themeInfo.previewOutColor = 0xff82a8e3;
+        themeInfo.previewBackgroundColor = 0xff1c1c1f;
+        themeInfo.previewInColor = 0xff29292a;
+        themeInfo.previewOutColor = 0xff3a3a3f;
         themeInfo.sortIndex = 3;
         themeInfo.setAccentColorOptions(
                 new int[]    {                    0xFF927BD4,                    0xFF698AFB,                    0xFF23A7F0,                    0xFF7B71D1,                    0xFF69B955,                    0xFF2990EA,                    0xFF7082E9,                    0xFF66BAED,                    0xff3685fa,                    0xff46c8ed,                    0xff64AC5F,                    0xffeb7cb1,                    0xffee902a,                    0xffa281f0,                    0xffd34324,                    0xffeebd34,                    0xff7f8fab,                    0xff3581e3 },
@@ -9620,7 +9625,7 @@ public class Theme {
     }
 
     public static Drawable createDefaultWallpaper(int w, int h) {
-        MotionBackgroundDrawable motionBackgroundDrawable = new MotionBackgroundDrawable(0xffdbddbb, 0xff6ba587, 0xffd5d88d, 0xff88b884, w != 0);
+        MotionBackgroundDrawable motionBackgroundDrawable = new MotionBackgroundDrawable(0xffe9e9e5, 0xffd9d9d4, 0xfff1f1ee, 0xffdfdfda, w != 0);
         if (w <= 0 || h <= 0) {
             w = Math.min(AndroidUtilities.displaySize.x, AndroidUtilities.displaySize.y);
             h = Math.max(AndroidUtilities.displaySize.x, AndroidUtilities.displaySize.y);
