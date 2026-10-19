@@ -7,7 +7,7 @@ Run from the repository root:
 It reads Telegram's default colors (ThemeColors.java) and the original theme
 files kept in Tools/rudy-theme/base/, runs every color through a port of
 Theme.changeColorAccent with a monochrome accent, applies Rudy's own colors
-(black header, black outgoing bubbles in light mode, charcoal in dark mode),
+(white header and black outgoing bubbles in light mode, charcoal in dark mode),
 and writes TMessagesProj/src/main/assets/{bluebubbles,darkblue}.attheme.
 The app then shows these colors as the default day and night themes.
 """
@@ -26,7 +26,7 @@ CONSTANTS = {'TELEGRAM_COLOR': 0xFF229AF0, 'TELEGRAM_COLOR_TEXT': 0xFF298ACF, 'D
 
 INK = 0xFF111113          # Rudy black
 INK_PRESSED = 0xFF2C2C2E
-HEADER_SUB = 0xFFA0A0A6
+HEADER_SUB_LIGHT = 0xFF8E8E93
 WHITE = 0xFFFFFFFF
 
 
@@ -179,13 +179,13 @@ def build(base_file, base_accent, accent, dark, overrides, out_bubble_text):
 
 
 LIGHT = {
-    'actionBarDefault': INK, 'actionBarDefaultIcon': WHITE, 'actionBarDefaultTitle': WHITE,
-    'actionBarDefaultSubtitle': HEADER_SUB, 'actionBarDefaultSelector': 0x2EFFFFFF,
-    'actionBarDefaultSearch': WHITE, 'actionBarDefaultSearchPlaceholder': 0x88FFFFFF,
-    'actionBarTabActiveText': WHITE, 'actionBarTabUnactiveText': 0xFF8E8E93, 'actionBarTabLine': WHITE,
-    'actionBarTabSelector': 0x2EFFFFFF, 'telegram_color_dialogsLogo': WHITE,
-    'avatar_backgroundActionBarBlue': INK, 'avatar_actionBarIconBlue': WHITE, 'avatar_actionBarSelectorBlue': 0x2EFFFFFF,
-    'avatar_subtitleInProfileBlue': HEADER_SUB, 'profile_title': WHITE,
+    'actionBarDefault': WHITE, 'actionBarDefaultIcon': INK, 'actionBarDefaultTitle': INK,
+    'actionBarDefaultSubtitle': HEADER_SUB_LIGHT, 'actionBarDefaultSelector': 0x14000000,
+    'actionBarDefaultSearch': INK, 'actionBarDefaultSearchPlaceholder': 0x66000000,
+    'actionBarTabActiveText': INK, 'actionBarTabUnactiveText': HEADER_SUB_LIGHT, 'actionBarTabLine': INK,
+    'actionBarTabSelector': 0x14000000, 'telegram_color_dialogsLogo': INK,
+    'avatar_backgroundActionBarBlue': WHITE, 'avatar_actionBarIconBlue': INK, 'avatar_actionBarSelectorBlue': 0x14000000,
+    'avatar_subtitleInProfileBlue': HEADER_SUB_LIGHT, 'profile_title': INK,
     'chats_actionBackground': INK, 'chats_actionPressedBackground': INK_PRESSED, 'chats_actionIcon': WHITE,
     'chat_outBubble': INK, 'chat_outBubbleSelected': 0xFF2A2A2D,
     'chat_messageLinkIn': 0xFF4A4A50,
